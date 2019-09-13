@@ -25,7 +25,7 @@ class TaHomaDevice extends IPSModule
     {
         $result = json_decode($this->SendDataToParent(json_encode([
             'DataID'   => '{656566E9-4C78-6C4C-2F16-63CDD4412E9E}',
-            'Endpoint' => '/v1/device/' . $this->ReadPropertyString("DeviceID"),
+            'Endpoint' => '/v1/device/' . $this->ReadPropertyString('DeviceID'),
             'Payload'  => ''
         ])));
 
@@ -36,10 +36,10 @@ class TaHomaDevice extends IPSModule
     {
         $result = json_decode($this->SendDataToParent(json_encode([
             'DataID'   => '{656566E9-4C78-6C4C-2F16-63CDD4412E9E}',
-            'Endpoint' => '/v1/device/' . $this->ReadPropertyString("DeviceID") . '/exec',
+            'Endpoint' => '/v1/device/' . $this->ReadPropertyString('DeviceID') . '/exec',
             'Payload'  => json_encode([
-                "name"       => $name,
-                "parameters" => []
+                'name'       => $name,
+                'parameters' => []
             ])
         ])));
 

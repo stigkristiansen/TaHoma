@@ -38,7 +38,7 @@ class TaHomaConfigurator extends IPSModule
             ])));
 
             foreach ($devices as $device) {
-                $this->SendDebug("Device", json_encode($device), 0);
+                $this->SendDebug('Device', json_encode($device), 0);
 
                 if (!isset($device->name)) {
                     continue;

@@ -179,8 +179,8 @@ class TaHomaCloud extends IPSModule
     {
         $opts = [
             'http'=> [
-            'method' => 'GET',
-            'header' => 'Authorization: Bearer ' . $this->FetchAccessToken() . "\r\n" . 'Content-Type: application/x-www-form-urlencoded' . "\r\n"
+                'method' => 'GET',
+                'header' => 'Authorization: Bearer ' . $this->FetchAccessToken() . "\r\n" . 'Content-Type: application/x-www-form-urlencoded' . "\r\n"
             ]
         ];
         $context = stream_context_create($opts);
