@@ -74,7 +74,8 @@ class TaHomaCloud extends IPSModule
             'http' => [
                 'header'  => "Content-Type: application/x-www-form-urlencoded\r\n",
                 'method'  => 'POST',
-                'content' => http_build_query(['code' => $code])
+                'content' => http_build_query(['code' => $code]),
+                'ignore_errors' => true
             ]
         ];
         $context = stream_context_create($options);
@@ -143,7 +144,8 @@ class TaHomaCloud extends IPSModule
                 'http' => [
                     'header'  => "Content-Type: application/x-www-form-urlencoded\r\n",
                     'method'  => 'POST',
-                    'content' => http_build_query(['refresh_token' => $this->ReadAttributeString('Token')])
+                    'content' => http_build_query(['refresh_token' => $this->ReadAttributeString('Token')]),
+                    'ignore_errors' => true
                 ]
             ];
             $context = stream_context_create($options);
@@ -181,12 +183,17 @@ class TaHomaCloud extends IPSModule
         $opts = [
             'http'=> [
                 'method' => 'GET',
-                'header' => 'Authorization: Bearer ' . $this->FetchAccessToken() . "\r\n" . 'Content-Type: application/x-www-form-urlencoded' . "\r\n"
+                'header' => 'Authorization: Bearer ' . $this->FetchAccessToken() . "\r\n" . 'Content-Type: application/json' . "\r\n",
+                'ignore_errors' => true
             ]
         ];
         $context = stream_context_create($opts);
 
-        return file_get_contents($url, false, $context);
+        $result = file_get_contents($url, false, $context);
+
+        $this->SendDebug("DATA", $result, 0);
+
+        return $result;
     }
 
     private function PostData($url, $content)
@@ -195,12 +202,17 @@ class TaHomaCloud extends IPSModule
             'http'=> [
                 'method'  => 'POST',
                 'header'  => 'Authorization: Bearer ' . $this->FetchAccessToken() . "\r\n" . 'Content-Type: application/json' . "\r\n" . 'Content-Length: ' . strlen($content) . "\r\n",
-                'content' => $content
+                'content' => $content,
+                'ignore_errors' => true
             ]
         ];
         $context = stream_context_create($opts);
 
-        return file_get_contents($url, false, $context);
+        $result = file_get_contents($url, false, $context);
+
+        $this->SendDebug("DATA", $result, 0);
+
+        return $result;
     }
 
     public function ForwardData($data)
@@ -232,7 +244,7 @@ class TaHomaCloud extends IPSModule
         if ($this->ReadAttributeString('Token') == '') {
             $data->actions[1]->label = 'TaHoma: Pleae register with your Somfy account!';
         } else {
-            $result = json_decode(@$this->GetData($this->apiURL . '/v1/site'));
+            $result = json_decode($this->GetData($this->apiURL . '/v1/site'));
 
             if ($result === false || $result === null || !is_countable($result)) {
                 $data->actions[1]->label = 'TaHoma: Error. Please check your internet connection or register again!';
