@@ -5,7 +5,8 @@ class TaHomaCloud extends IPSModule
 {
     //This one needs to be available on our OAuth client backend.
     //Please contact us to register for an identifier: https://www.symcon.de/kontakt/#OAuth
-    private $oauthIdentifer = 'somfy';
+    //Use the somfy_dev endpoint. The default somfy endpoint seems to be broken for unknown reasons.
+    private $oauthIdentifer = 'somfy_dev';
 
     private $apiURL = 'https://api.somfy.com/api';
 
