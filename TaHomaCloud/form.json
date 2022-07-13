@@ -19,8 +19,8 @@
             "type": "PopupButton",
             "caption": "Login",
             "popup": {
-                "caption" : "Please use your Somfy Account to log in!",
-                "buttons" : [
+                "caption": "Please use your Somfy Account to log in!",
+                "buttons": [
                     {
                         "caption": "Login",
                         "onClick": "TAHOMA_Login($id, $Username, $Password);"
