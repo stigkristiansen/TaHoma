@@ -9,21 +9,7 @@ class TaHomaConfigurator extends IPSModule
         parent::Create();
 
         //Connect to available splitter or create a new one
-        $this->ConnectParent('{6F83CEDB-BC40-63BB-C209-88D6B252C9FF}');
-
-        $this->RegisterPropertyString('SiteID', '');
-    }
-
-    private function searchDevice($deviceID)
-    {
-        $ids = IPS_GetInstanceListByModuleID('{4434685E-551F-D887-3163-006833D318E3}');
-        foreach ($ids as $id) {
-            if (IPS_GetProperty($id, 'DeviceID') == $deviceID) {
-                return $id;
-            }
-        }
-
-        return 0;
+        $this->ConnectParent('{161B0F84-1B8B-2EF0-1C8F-2EFFAC39006E}');
     }
 
     public function GetConfigurationForm()
@@ -33,27 +19,34 @@ class TaHomaConfigurator extends IPSModule
         if ($this->HasActiveParent()) {
             $devices = json_decode($this->SendDataToParent(json_encode([
                 'DataID'   => '{656566E9-4C78-6C4C-2F16-63CDD4412E9E}',
-                'Endpoint' => '/v1/site/' . $this->ReadPropertyString('SiteID') . '/device',
+                'Endpoint' => '/setup/devices',
                 'Payload'  => ''
             ])));
 
             foreach ($devices as $device) {
                 $this->SendDebug('Device', json_encode($device), 0);
 
-                if (!isset($device->name)) {
-                    continue;
-                } //skip devices without names (e.g. the hub)
+                $getAttribute = function ($device, $name)
+                {
+                    foreach ($device->attributes as $attribute) {
+                        if ($attribute->name == $name) {
+                            return $attribute->value;
+                        }
+                    }
+                    return '';
+                };
 
                 $data->actions[0]->values[] = [
-                    'address'    => $device->id,
-                    'name'       => $device->name,
-                    'type'       => $device->type,
-                    'instanceID' => $this->searchDevice($device->id),
-                    'create'     => [
-                        'moduleID'      => '{4434685E-551F-D887-3163-006833D318E3}',
+                    'address'      => $device->deviceURL,
+                    'name'         => $device->label,
+                    'type'         => $device->type,
+                    'manufacturer' => $getAttribute($device, 'core:Manufacturer'),
+                    'firmware'     => $getAttribute($device, 'core:FirmwareRevision'),
+                    'instanceID'   => $this->searchDevice($device->deviceURL),
+                    'create'       => [
+                        'moduleID'      => '{C3F89070-FE4D-A30A-C81F-B28131B32990}',
                         'configuration' => [
-                            'SiteID'   => $this->ReadPropertyString('SiteID'),
-                            'DeviceID' => $device->id
+                            'DeviceURL' => $device->deviceURL
                         ]
                     ]
                 ];
@@ -61,5 +54,16 @@ class TaHomaConfigurator extends IPSModule
         }
 
         return json_encode($data);
+    }
+
+    private function searchDevice($deviceURL)
+    {
+        $ids = IPS_GetInstanceListByModuleID('{4434685E-551F-D887-3163-006833D318E3}');
+        foreach ($ids as $id) {
+            if (IPS_GetProperty($id, 'DeviceURL') == $deviceURL) {
+                return $id;
+            }
+        }
+        return 0;
     }
 }

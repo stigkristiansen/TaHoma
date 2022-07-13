@@ -3,53 +3,50 @@
 declare(strict_types=1);
 class TaHomaDiscovery extends IPSModule
 {
-    public function Create()
-    {
-        //Never delete this line!
-        parent::Create();
-
-        //Connect to available splitter or create a new one
-        $this->ConnectParent('{6F83CEDB-BC40-63BB-C209-88D6B252C9FF}');
-    }
-
-    private function searchSiteConfigurator($siteID)
-    {
-        $ids = IPS_GetInstanceListByModuleID('{0AEE6E12-86BF-D8A1-90EA-66C9D45D052E}');
-        foreach ($ids as $id) {
-            if (IPS_GetProperty($id, 'SiteID') == $siteID) {
-                return $id;
-            }
-        }
-
-        return 0;
-    }
-
     public function GetConfigurationForm()
     {
         $data = json_decode(file_get_contents(__DIR__ . '/form.json'));
 
-        if ($this->HasActiveParent()) {
-            $result = json_decode($this->SendDataToParent(json_encode([
-                'DataID'   => '{656566E9-4C78-6C4C-2F16-63CDD4412E9E}',
-                'Endpoint' => '/v1/site',
-                'Payload'  => ''
-            ])));
-
-            foreach ($result as $site) {
-                $data->actions[0]->values[] = [
-                    'address'    => $site->id,
-                    'name'       => $site->label,
-                    'instanceID' => $this->searchSiteConfigurator($site->id),
-                    'create'     => [
+        foreach ($this->discoverDevices() as $device) {
+            $data->actions[0]->values[] = [
+                'address'    => $device['Host'],
+                'name'       => $device['Host'],
+                'pin'        => $device['PIN'],
+                'instanceID' => 0,
+                'create'     => [
+                    [
                         'moduleID'      => '{0AEE6E12-86BF-D8A1-90EA-66C9D45D052E}',
+                    ],
+                    [
+                        'moduleID'      => '{161B0F84-1B8B-2EF0-1C8F-2EFFAC39006E}',
                         'configuration' => [
-                            'SiteID' => $site->id
-                        ]
-                    ]
-                ];
-            }
+                            'Host'       => $device['Host'],
+                            'GatewayPIN' => $device['PIN'],
+                        ],
+                    ],
+                ]
+            ];
         }
 
         return json_encode($data);
+    }
+    private function discoverDevices()
+    {
+        $ids = IPS_GetInstanceListByModuleID('{780B2D48-916C-4D59-AD35-5A429B2355A5}');
+        $devices = ZC_QueryServiceType($ids[0], '_kizboxdev._tcp', '');
+        $this->SendDebug('QueryServiceType', print_r($devices, true), 0);
+        $result = [];
+        foreach ($devices as $device) {
+            $deviceInfo = ZC_QueryService($ids[0], $device['Name'], '_kizboxdev._tcp', 'local.');
+            if ($deviceInfo) {
+                $this->SendDebug('QueryService', print_r($deviceInfo, true), 0);
+                $result[] = [
+                    'Host' => $deviceInfo[0]['Host'],
+                    'IPv4' => $deviceInfo[0]['IPv4'][0],
+                    'PIN'  => 'ToDo',
+                ];
+            }
+        }
+        return $result;
     }
 }

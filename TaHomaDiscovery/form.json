@@ -15,6 +15,11 @@
                     "label": "Name",
                     "name": "name",
                     "width": "auto"
+                },
+                {
+                    "label": "Gateway PIN",
+                    "name": "pin",
+                    "width": "100px"
                 }
             ],
             "sort": {

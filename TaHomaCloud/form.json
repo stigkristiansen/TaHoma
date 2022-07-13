@@ -1,10 +1,54 @@
 {
-	"elements": [
-		{ "type": "Button", "label": "Register", "onClick": "echo TAHOMA_Register($id);" }
-	],
-	"actions":
-	[
-		{ "type": "Label" },
-		{ "type": "Label" }
-	]
+    "elements": [
+        {
+            "type": "ValidationTextBox",
+            "name": "Host",
+            "caption": "Host"
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "GatewayPIN",
+            "caption": "Gateway PIN"
+        }
+    ],
+    "actions": [
+        {
+            "type": "Label"
+        },
+        {
+            "type": "PopupButton",
+            "caption": "Login",
+            "popup": {
+                "caption" : "Please use your Somfy Account to log in!",
+                "buttons" : [
+                    {
+                        "caption": "Login",
+                        "onClick": "TAHOMA_Login($id, $Username, $Password);"
+                    }
+                ],
+                "items": [
+                    {
+                        "type": "ValidationTextBox",
+                        "name": "Username",
+                        "caption": "Username"
+                    },
+                    {
+                        "type": "ValidationTextBox",
+                        "name": "Password",
+                        "caption": "Password"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Button",
+            "caption": "Register for Events (Debug)",
+            "onClick": "TAHOMA_Register($id);"
+        },
+        {
+            "type": "Button",
+            "caption": "Fetch Events (Debug)",
+            "onClick": "TAHOMA_Fetch($id);"
+        }
+    ]
 }

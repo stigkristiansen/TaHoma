@@ -1,11 +1,4 @@
 {
-    "elements": [
-        {
-            "type": "ValidationTextBox",
-            "name": "SiteID",
-            "caption": "Site ID"
-        }
-    ],
     "actions": [
         {
             "type": "Configurator",
@@ -21,12 +14,22 @@
                 {
                     "caption": "Type",
                     "name": "type",
-                    "width": "350px"
+                    "width": "50px"
                 },
                 {
                     "label": "Name",
                     "name": "name",
                     "width": "auto"
+                },
+                {
+                    "caption": "Manufacturer",
+                    "name": "manufacturer",
+                    "width": "150px"
+                },
+                {
+                    "caption": "Firmware",
+                    "name": "firmware",
+                    "width": "150px"
                 }
             ],
             "sort": {
