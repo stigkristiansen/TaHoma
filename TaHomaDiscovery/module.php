@@ -64,10 +64,13 @@ class TaHomaDiscovery extends IPSModule
 
     private function searchDevice($pin)
     {
-        $ids = IPS_GetInstanceListByModuleID('{161B0F84-1B8B-2EF0-1C8F-2EFFAC39006E}');
+        $ids = IPS_GetInstanceListByModuleID('{AFAC39AA-770E-2AD7-0C24-D813F5FDC0FB}');
         foreach ($ids as $id) {
-            if (IPS_GetProperty($id, 'GatewayPIN') == $pin) {
-                return $id;
+            $i = IPS_GetInstance($id);
+            if ($i['ConnectionID'] > 0) {
+                if (IPS_GetProperty($i['ConnectionID'], 'GatewayPIN') == $pin) {
+                    return $id;
+                }
             }
         }
         return 0;
