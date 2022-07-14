@@ -181,7 +181,7 @@ class TaHomaCloud extends IPSModule
 
         $this->SetBuffer('ListenerID', $result->id);
 
-        $this->SetTimerInterval('Fetch', 5000);
+        $this->SetTimerInterval('Fetch', 1000);
 
         return true;
     }
@@ -206,6 +206,14 @@ class TaHomaCloud extends IPSModule
             $this->SetBuffer('ListenerID', '');
 
             var_dump($result);
+        }
+
+        // Forward Events to children
+        foreach ($result as $event) {
+            $this->SendDataToChildren(json_encode([
+                'DataID' => '{59020227-ED4A-9F60-F34C-E2E7771D9764}',
+                'Event'  => $event
+            ]));
         }
     }
 

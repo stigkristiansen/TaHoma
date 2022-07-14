@@ -18,6 +18,27 @@ class TaHomaDevice extends IPSModule
     {
         //Never delete this line!
         parent::ApplyChanges();
+
+        // Only receive packets for our Device
+        $this->SetReceiveDataFilter(sprintf('.*%s.*', str_replace('/', '\\\\\\/', $this->ReadPropertyString('DeviceURL'))));
+
+        // Update device on first creation
+        if ($this->HasActiveParent() && $this->ReadPropertyString('DeviceURL') && empty(IPS_GetChildrenIDs($this->InstanceID))) {
+            $this->RequestStatus();
+        }
+    }
+
+    public function ReceiveData($JSONString)
+    {
+        $data = json_decode($JSONString);
+
+        $this->SendDebug('EVENT', json_encode($data->Event), 0);
+
+        if (isset($data->Event->deviceStates)) {
+            foreach ($data->Event->deviceStates as $state) {
+                $this->processState($state);
+            }
+        }
     }
 
     public function RequestStatus()
@@ -31,23 +52,7 @@ class TaHomaDevice extends IPSModule
         $this->SendDebug('DATA', json_encode($result), 0);
 
         foreach ($result->states as $state) {
-            switch ($state->type) {
-                case 1: // Integer
-                    $this->RegisterVariableInteger($this->sanitizeName($state->name), $this->beautifyName($state->name));
-                    $this->SetValue($this->sanitizeName($state->name), $state->value);
-                    break;
-                case 3: // String
-                    $this->RegisterVariableString($this->sanitizeName($state->name), $this->beautifyName($state->name));
-                    $this->SetValue($this->sanitizeName($state->name), $state->value);
-                    break;
-                case 6: // Boolean
-                    $this->RegisterVariableBoolean($this->sanitizeName($state->name), $this->beautifyName($state->name));
-                    $this->SetValue($this->sanitizeName($state->name), $state->value);
-                    break;
-                case 11: // Object
-                    $this->SendDebug('UNSUPPORTED', $state->name . ': ' . json_encode($state->value), 0);
-                    break;
-            }
+            $this->processState($state);
         }
     }
 
@@ -77,13 +82,52 @@ class TaHomaDevice extends IPSModule
         }
     }
 
+    private function processState($state)
+    {
+        if (!$this->filterState($state->name)) {
+            switch ($state->type) {
+                case 1: // Integer
+                    $this->RegisterVariableInteger($this->sanitizeName($state->name), $this->beautifyName($state->name));
+                    $this->SetValue($this->sanitizeName($state->name), $state->value);
+                    break;
+                case 3: // String
+                    $this->RegisterVariableString($this->sanitizeName($state->name), $this->beautifyName($state->name));
+                    $this->SetValue($this->sanitizeName($state->name), $state->value);
+                    break;
+                case 6: // Boolean
+                    $this->RegisterVariableBoolean($this->sanitizeName($state->name), $this->beautifyName($state->name));
+                    $this->SetValue($this->sanitizeName($state->name), $state->value);
+                    break;
+                case 11: // Object
+                    $this->SendDebug('UNSUPPORTED', $state->name . ': ' . json_encode($state->value), 0);
+                    break;
+            }
+        }
+    }
+
     private function beautifyName($name)
     {
-        return str_replace('core:', '', $name);
+        $name = str_replace('core:', '', $name);
+        $name = str_replace('State', '', $name);
+        return $name;
     }
 
     private function sanitizeName($name)
     {
         return str_replace(':', '_', $name);
+    }
+
+    private function filterState($name)
+    {
+        switch ($name) {
+            // We have the name on the instance itself. Do not waste variables
+            case 'core:NameState':
+                return true;
+            // We prefer the core:TargetCloseState which will immediately show the new target
+            case 'core:ClosureState':
+                return true;
+            default:
+                return false;
+        }
     }
 }
