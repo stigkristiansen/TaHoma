@@ -1,0 +1,9 @@
+{
+    "translations": {
+        "de": {
+            "Address": "Adresse",
+            "Name": "Name",
+            "Gateway PIN": "Gateway PIN"
+        }
+    }
+}

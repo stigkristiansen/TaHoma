@@ -1,0 +1,11 @@
+{
+    "translations": {
+        "de": {
+            "Address": "Adresse",
+            "Type": "Typ",
+            "Name": "Name",
+            "Manufacturer": "Hersteller",
+            "Firmware": "Firmware"
+        }
+    }
+}

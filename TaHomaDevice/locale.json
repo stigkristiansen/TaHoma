@@ -1,0 +1,12 @@
+{
+    "translations": {
+        "de": {
+            "Status": "Zustand",
+            "Position": "Position",
+            "Connection": "Verbindung",
+            "Moving": "In Bewegung",
+            "Update": "Aktualisieren",
+            "Identify": "Identifizieren"
+        }
+    }
+}
