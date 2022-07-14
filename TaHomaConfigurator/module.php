@@ -58,7 +58,7 @@ class TaHomaConfigurator extends IPSModule
 
     private function searchDevice($deviceURL)
     {
-        $ids = IPS_GetInstanceListByModuleID('{4434685E-551F-D887-3163-006833D318E3}');
+        $ids = IPS_GetInstanceListByModuleID('{C3F89070-FE4D-A30A-C81F-B28131B32990}');
         foreach ($ids as $id) {
             if (IPS_GetProperty($id, 'DeviceURL') == $deviceURL) {
                 return $id;
