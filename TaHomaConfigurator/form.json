@@ -14,7 +14,7 @@
                 {
                     "caption": "Type",
                     "name": "type",
-                    "width": "50px"
+                    "width": "100px"
                 },
                 {
                     "label": "Name",

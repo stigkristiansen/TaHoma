@@ -26,6 +26,11 @@ class TaHomaConfigurator extends IPSModule
             foreach ($devices as $device) {
                 $this->SendDebug('Device', json_encode($device), 0);
 
+                // This type does not have any variables
+                if ($device->type == 5 /* PROTOCOL_GATEWAY */) {
+                    continue;
+                }
+
                 $getAttribute = function ($device, $name)
                 {
                     foreach ($device->attributes as $attribute) {
@@ -39,7 +44,7 @@ class TaHomaConfigurator extends IPSModule
                 $data->actions[0]->values[] = [
                     'address'      => $device->deviceURL,
                     'name'         => $device->label,
-                    'type'         => $device->type,
+                    'type'         => $device->definition->type,
                     'manufacturer' => $getAttribute($device, 'core:Manufacturer'),
                     'firmware'     => $getAttribute($device, 'core:FirmwareRevision'),
                     'instanceID'   => $this->searchDevice($device->deviceURL),
