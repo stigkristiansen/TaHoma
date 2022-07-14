@@ -20,7 +20,7 @@ class TaHomaDiscovery extends IPSModule
                     [
                         'moduleID'      => '{161B0F84-1B8B-2EF0-1C8F-2EFFAC39006E}',
                         'configuration' => [
-                            'Host'       => $device['Host'],
+                            'Host'       => $device['IPv4'],
                             'GatewayPIN' => $device['PIN'],
                         ],
                     ],
