@@ -12,6 +12,14 @@ class TaHomaDevice extends IPSModule
         $this->ConnectParent('{161B0F84-1B8B-2EF0-1C8F-2EFFAC39006E}');
 
         $this->RegisterPropertyString('DeviceURL', '');
+
+        //Register Profiles
+        if (!IPS_VariableProfileExists('TAHOMA.OpenClosedState')) {
+            IPS_CreateVariableProfile('TAHOMA.OpenClosedState', VARIABLETYPE_STRING);
+            IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'open', $this->Translate('Offen'), 'Window-0', -1);
+            IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'stop', $this->Translate('Stop'), '', -1);
+            IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'closed', $this->Translate('Geschlossen'), 'Window-100', -1);
+        }
     }
 
     public function ApplyChanges()
@@ -56,6 +64,33 @@ class TaHomaDevice extends IPSModule
         }
     }
 
+    public function RequestAction($Ident, $Value)
+    {
+        switch ($Ident) {
+            case 'core_TargetClosureState':
+                $this->SendCommand('setPosition', [$Value]);
+                break;
+            case 'core_SlateOrientationState':
+                $this->SendCommand('setOrientation', [$Value]);
+                break;
+            case 'core_OpenClosedState':
+                switch ($Value) {
+                    case 'open':
+                        $this->SendCommand('open', []);
+                        break;
+                    case 'stop':
+                        $this->SendCommand('stop', []);
+                        break;
+                    case 'closed':
+                        $this->SendCommand('close', []);
+                        break;
+                }
+                break;
+            default:
+                throw new Exception('Invalid Ident');
+        }
+    }
+
     public function SendCommand(string $name, array $parameters)
     {
         $result = json_decode($this->SendDataToParent(json_encode([
@@ -87,16 +122,19 @@ class TaHomaDevice extends IPSModule
         if (!$this->filterState($state->name)) {
             switch ($state->type) {
                 case 1: // Integer
-                    $this->RegisterVariableInteger($this->sanitizeName($state->name), $this->beautifyName($state->name));
+                    $this->RegisterVariableInteger($this->sanitizeName($state->name), $this->beautifyName($state->name), $this->getProfile($state->name), $this->getPosition($state->name));
                     $this->SetValue($this->sanitizeName($state->name), $state->value);
+                    $this->registerAction($state->name);
                     break;
                 case 3: // String
-                    $this->RegisterVariableString($this->sanitizeName($state->name), $this->beautifyName($state->name));
+                    $this->RegisterVariableString($this->sanitizeName($state->name), $this->beautifyName($state->name), $this->getProfile($state->name), $this->getPosition($state->name));
                     $this->SetValue($this->sanitizeName($state->name), $state->value);
+                    $this->registerAction($state->name);
                     break;
                 case 6: // Boolean
-                    $this->RegisterVariableBoolean($this->sanitizeName($state->name), $this->beautifyName($state->name));
+                    $this->RegisterVariableBoolean($this->sanitizeName($state->name), $this->beautifyName($state->name), $this->getProfile($state->name), $this->getPosition($state->name));
                     $this->SetValue($this->sanitizeName($state->name), $state->value);
+                    $this->registerAction($state->name);
                     break;
                 case 11: // Object
                     $this->SendDebug('UNSUPPORTED', $state->name . ': ' . json_encode($state->value), 0);
@@ -107,9 +145,23 @@ class TaHomaDevice extends IPSModule
 
     private function beautifyName($name)
     {
-        $name = str_replace('core:', '', $name);
-        $name = str_replace('State', '', $name);
-        return $name;
+        switch ($name) {
+            case 'core:OpenClosedState':
+                return $this->Translate('Status');
+            case 'core:TargetClosureState':
+                return $this->Translate('Position');
+            case 'core:SlateOrientationState':
+                return $this->Translate('Slate');
+            case 'core:DiscreteRSSILevelState':
+                return $this->Translate('Connection');
+            case 'core:MovingState':
+                return $this->Translate('Moving');
+            default:
+                $name = str_replace('core:', '', $name);
+                $name = str_replace('internal:', '', $name);
+                $name = str_replace('State', '', $name);
+                return $name;
+        }
     }
 
     private function sanitizeName($name)
@@ -117,17 +169,67 @@ class TaHomaDevice extends IPSModule
         return str_replace(':', '_', $name);
     }
 
+    private function getProfile($name)
+    {
+        switch ($name) {
+            case 'core:TargetClosureState':
+            case 'core:SlateOrientationState':
+                return '~Intensity.100';
+            case 'core:OpenClosedState':
+                return 'TAHOMA.OpenClosedState';
+            default:
+                return '';
+        }
+    }
+
+    private function getPosition($name)
+    {
+        switch ($name) {
+            case 'core:OpenClosedState':
+                return 1;
+            case 'core:TargetClosureState':
+                return 2;
+            case 'core:SlateOrientationState':
+                return 3;
+            case 'core:MovingState':
+                return 4;
+            case 'core:DiscreteRSSILevelState':
+                return 5;
+            default:
+                return 6;
+        }
+    }
+
     private function filterState($name)
     {
         switch ($name) {
             // We have the name on the instance itself. Do not waste variables
             case 'core:NameState':
-                return true;
-            // We prefer the core:TargetCloseState which will immediately show the new target
+            // We prefer the core:TargetClosureState which will immediately show the new target
             case 'core:ClosureState':
+            // Just keep the DiscreteRSSILevelState
+            case 'core:RSSILevelState':
+            case 'core:StatusState':
+            // We do not need the memorized positions/orientations for now
+            case 'core:Memorized1PositionState':
+            case 'core:Memorized1OrientationState':
+            // We do not need the configured secured position
+            case 'core:SecuredPositionState':
                 return true;
+            // By default, we want to create the variable
             default:
                 return false;
+        }
+    }
+
+    private function registerAction($name)
+    {
+        switch ($name) {
+            case 'core:TargetClosureState':
+            case 'core:SlateOrientationState':
+            case 'core:OpenClosedState':
+                $this->EnableAction($this->sanitizeName($name));
+                break;
         }
     }
 }
