@@ -1,4 +1,11 @@
 {
+    "elements": [
+        {
+            "type": "ValidationTextBox",
+            "name": "DeviceURL",
+            "caption": "Device URL"
+        }
+    ],
     "actions": [
         {
             "type": "Button",
