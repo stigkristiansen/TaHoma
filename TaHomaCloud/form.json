@@ -39,16 +39,6 @@
                     }
                 ]
             }
-        },
-        {
-            "type": "Button",
-            "caption": "Register for Events (Debug)",
-            "onClick": "TAHOMA_Register($id);"
-        },
-        {
-            "type": "Button",
-            "caption": "Fetch Events (Debug)",
-            "onClick": "TAHOMA_Fetch($id);"
         }
     ]
 }

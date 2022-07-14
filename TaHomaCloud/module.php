@@ -27,6 +27,9 @@ class TaHomaCloud extends IPSModule
             $this->SetStatus(IS_INACTIVE);
         } else {
             $this->SetStatus(IS_ACTIVE);
+
+            // Enable Fetch timer to register for events
+            $this->SetTimerInterval('Fetch', 1000);
         }
     }
 
@@ -171,15 +174,39 @@ class TaHomaCloud extends IPSModule
         $this->SendDebug('Register', '', 0);
         $result = json_decode($this->PostData($this->MakeLocalEndpoint('/events/register'), ''));
 
+        if (!isset($result->id)) {
+            var_dump($result);
+            return false;
+        }
+
         $this->SetBuffer('ListenerID', $result->id);
 
         $this->SetTimerInterval('Fetch', 5000);
+
+        return true;
     }
 
     public function Fetch()
     {
+        if (!$this->GetBuffer('ListenerID')) {
+            // Disable timer for now. We will enable it after a successful register
+            $this->SetTimerInterval('Fetch', 0);
+
+            // If successful it will enable the Fetch timer
+            if (!$this->Register()) {
+                return;
+            }
+        }
+
         $this->SendDebug('Fetch', 'ListenerID: ' . $this->GetBuffer('ListenerID'), 0);
         $result = json_decode($this->PostData($this->MakeLocalEndpoint(sprintf('/events/%s/fetch', $this->GetBuffer('ListenerID'))), ''));
+
+        // On error reset the ListenerID. We will reregister on the next run.
+        if (isset($result->error)) {
+            $this->SetBuffer('ListenerID', '');
+
+            var_dump($result);
+        }
     }
 
     private function MakeLocalEndpoint($endpoint)
