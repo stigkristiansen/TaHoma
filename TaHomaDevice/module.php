@@ -44,7 +44,7 @@ class TaHomaDevice extends IPSModule
 
         if (isset($data->Event->deviceStates)) {
             foreach ($data->Event->deviceStates as $state) {
-                $this->processState($state);
+                $this->processState($state, $data->Event->deviceStates);
             }
         }
     }
@@ -60,7 +60,7 @@ class TaHomaDevice extends IPSModule
         $this->SendDebug('DATA', json_encode($result), 0);
 
         foreach ($result->states as $state) {
-            $this->processState($state);
+            $this->processState($state, $result->states);
         }
     }
 
@@ -68,6 +68,7 @@ class TaHomaDevice extends IPSModule
     {
         switch ($Ident) {
             case 'core_TargetClosureState':
+            case 'core_ClosureState':
                 $this->SendCommand('setPosition', [$Value]);
                 break;
             case 'core_SlateOrientationState':
@@ -117,9 +118,9 @@ class TaHomaDevice extends IPSModule
         }
     }
 
-    private function processState($state)
+    private function processState($state, $states)
     {
-        if (!$this->filterState($state->name)) {
+        if (!$this->filterState($state->name, $states)) {
             switch ($state->type) {
                 case 1: // Integer
                     $this->RegisterVariableInteger($this->sanitizeName($state->name), $this->beautifyName($state->name), $this->getProfile($state->name), $this->getPosition($state->name));
@@ -149,6 +150,7 @@ class TaHomaDevice extends IPSModule
             case 'core:OpenClosedState':
                 return $this->Translate('Status');
             case 'core:TargetClosureState':
+            case 'core:ClosureState':
                 return $this->Translate('Position');
             case 'core:SlateOrientationState':
                 return $this->Translate('Slate');
@@ -173,6 +175,7 @@ class TaHomaDevice extends IPSModule
     {
         switch ($name) {
             case 'core:TargetClosureState':
+            case 'core:ClosureState':
             case 'core:SlateOrientationState':
                 return '~Intensity.100';
             case 'core:OpenClosedState':
@@ -188,6 +191,7 @@ class TaHomaDevice extends IPSModule
             case 'core:OpenClosedState':
                 return 1;
             case 'core:TargetClosureState':
+            case 'core:ClosureState':
                 return 2;
             case 'core:SlateOrientationState':
                 return 3;
@@ -200,13 +204,11 @@ class TaHomaDevice extends IPSModule
         }
     }
 
-    private function filterState($name)
+    private function filterState($name, $states)
     {
         switch ($name) {
             // We have the name on the instance itself. Do not waste variables
             case 'core:NameState':
-            // We prefer the core:TargetClosureState which will immediately show the new target
-            case 'core:ClosureState':
             // Just keep the DiscreteRSSILevelState
             case 'core:RSSILevelState':
             case 'core:StatusState':
@@ -216,6 +218,15 @@ class TaHomaDevice extends IPSModule
             // We do not need the configured secured position
             case 'core:SecuredPositionState':
                 return true;
+            // We prefer the core:TargetClosureState which will immediately show the new target
+            // But for VELUX, we might not get a TargetClosureState. Use this as a fallback
+            case 'core:ClosureState':
+                foreach ($states as $state) {
+                    if ($state->name == 'core:TargetClosureState') {
+                        return true;
+                    }
+                }
+                return false;
             // By default, we want to create the variable
             default:
                 return false;
@@ -226,6 +237,7 @@ class TaHomaDevice extends IPSModule
     {
         switch ($name) {
             case 'core:TargetClosureState':
+            case 'core:ClosureState':
             case 'core:SlateOrientationState':
             case 'core:OpenClosedState':
                 $this->EnableAction($this->sanitizeName($name));
