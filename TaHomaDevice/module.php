@@ -62,6 +62,17 @@ class TaHomaDevice extends IPSModule
         foreach ($result->states as $state) {
             $this->processState($state, $result->states);
         }
+
+        // RTS devices do not seem to report any supported states
+        // But they are happy to execute open, stop, close commands
+        // We want to check for availability of those commands and simulate an open/close variable
+        if (empty($result->states) && $this->supportsCommands($result->definition->commands, ['open', 'stop', 'close'])) {
+            $this->processState([
+                'type'  => 3,
+                'name'  => 'OpenClosedState',
+                'value' => 'open',
+            ], $result->states);
+        }
     }
 
     public function RequestAction($Ident, $Value)
@@ -116,6 +127,21 @@ class TaHomaDevice extends IPSModule
         if (!isset($result->execId)) {
             var_dump($result);
         }
+    }
+
+    private function supportsCommands($commands, $required)
+    {
+        foreach ($commands as $command) {
+            if ($command->commandName == $required[0]) {
+                if (count($required) <= 1) {
+                    return true;
+                } else {
+                    array_shift($required);
+                    return $this->supportsCommands($commands, $required);
+                }
+            }
+        }
+        return false;
     }
 
     private function processState($state, $states)
