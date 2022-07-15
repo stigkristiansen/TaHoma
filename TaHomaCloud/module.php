@@ -165,6 +165,9 @@ class TaHomaCloud extends IPSModule
         $this->WriteAttributeString('Token', $token);
         $this->SetStatus(IS_ACTIVE);
 
+        // Enable Fetch timer to register for events
+        $this->SetTimerInterval('Fetch', 1000);
+            
         // Reload form to show token
         $this->ReloadForm();
     }
