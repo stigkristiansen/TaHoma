@@ -67,7 +67,7 @@ class TaHomaDevice extends IPSModule
         // But they are happy to execute open, stop, close commands
         // We want to check for availability of those commands and simulate an open/close variable
         if (empty($result->states) && $this->supportsCommands($result->definition->commands, ['open', 'stop', 'close'])) {
-            $this->processState([
+            $this->processState((object) [
                 'type'  => 3,
                 'name'  => 'core:OpenClosedState',
                 'value' => 'open',
