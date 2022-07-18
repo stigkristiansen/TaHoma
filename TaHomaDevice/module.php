@@ -69,7 +69,7 @@ class TaHomaDevice extends IPSModule
         if (empty($result->states) && $this->supportsCommands($result->definition->commands, ['open', 'stop', 'close'])) {
             $this->processState([
                 'type'  => 3,
-                'name'  => 'OpenClosedState',
+                'name'  => 'core:OpenClosedState',
                 'value' => 'open',
             ], $result->states);
         }
