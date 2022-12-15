@@ -23,6 +23,8 @@ class TaHomaConfigurator extends IPSModule
                 'Payload'  => ''
             ])));
 
+            $physicalChildren = $this->getPhysicalChildren();
+
             foreach ($devices as $device) {
                 $this->SendDebug('Device', json_encode($device), 0);
 
@@ -41,13 +43,16 @@ class TaHomaConfigurator extends IPSModule
                     return '';
                 };
 
+                $instanceID = $this->searchDevice($device->deviceURL);
+                $physicalChildren = array_diff($physicalChildren, [$instanceID]);
+
                 $data->actions[0]->values[] = [
                     'address'      => $device->deviceURL,
                     'name'         => $device->label,
                     'type'         => $device->definition->type,
                     'manufacturer' => $getAttribute($device, 'core:Manufacturer'),
                     'firmware'     => $getAttribute($device, 'core:FirmwareRevision'),
-                    'instanceID'   => $this->searchDevice($device->deviceURL),
+                    'instanceID'   => $instanceID,
                     'create'       => [
                         'moduleID'      => '{C3F89070-FE4D-A30A-C81F-B28131B32990}',
                         'configuration' => [
@@ -56,17 +61,45 @@ class TaHomaConfigurator extends IPSModule
                     ]
                 ];
             }
+
+            foreach ($physicalChildren as $instanceID) {
+                $data->actions[0]->values[] = [
+                    'address'      => IPS_GetProperty($instanceID, 'DeviceURL'),
+                    'name'         => IPS_GetName($instanceID),
+                    'type'         => '',
+                    'manufacturer' => '',
+                    'firmware'     => '',
+                    'instanceID'   => $instanceID,
+                ];
+            }
         }
 
         return json_encode($data);
     }
 
+    private function getPhysicalChildren()
+    {
+        $connectionID = IPS_GetInstance($this->InstanceID);
+        $ids = IPS_GetInstanceListByModuleID('{C3F89070-FE4D-A30A-C81F-B28131B32990}');
+        $result = [];
+        foreach ($ids as $id) {
+            $i = IPS_GetInstance($id);
+            if ($i['ConnectionID'] == $connectionID['ConnectionID']) {
+                $result[] = $id;
+            }
+        }
+        return $result;
+    }
     private function searchDevice($deviceURL)
     {
+        $connectionID = IPS_GetInstance($this->InstanceID);
         $ids = IPS_GetInstanceListByModuleID('{C3F89070-FE4D-A30A-C81F-B28131B32990}');
         foreach ($ids as $id) {
-            if (IPS_GetProperty($id, 'DeviceURL') == $deviceURL) {
-                return $id;
+            $i = IPS_GetInstance($id);
+            if ($i['ConnectionID'] == $connectionID['ConnectionID']) {
+                if (IPS_GetProperty($id, 'DeviceURL') == $deviceURL) {
+                    return $id;
+                }
             }
         }
         return 0;

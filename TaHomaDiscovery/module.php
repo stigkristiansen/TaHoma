@@ -7,12 +7,18 @@ class TaHomaDiscovery extends IPSModule
     {
         $data = json_decode(file_get_contents(__DIR__ . '/form.json'));
 
-        foreach ($this->discoverDevices() as $device) {
+        $discoveredDevices = $this->discoverDevices();
+        $physicalChildren = $this->getPhysicalChildren();
+
+        foreach ($discoveredDevices as $device) {
+            $instanceID = $this->searchDevice($device['PIN']);
+            $physicalChildren = array_diff($physicalChildren, [$instanceID]);
+
             $data->actions[0]->values[] = [
                 'address'    => $device['IPv4'],
                 'name'       => $device['Host'],
                 'pin'        => $device['PIN'],
-                'instanceID' => $this->searchDevice($device['PIN']),
+                'instanceID' => $instanceID,
                 'create'     => [
                     [
                         'moduleID'      => '{AFAC39AA-770E-2AD7-0C24-D813F5FDC0FB}',
@@ -26,6 +32,25 @@ class TaHomaDiscovery extends IPSModule
                     ],
                 ]
             ];
+        }
+
+        foreach ($physicalChildren as $instanceID) {
+            $i = IPS_GetInstance($instanceID);
+            if ($i['ConnectionID'] > 0) {
+                $data->actions[0]->values[] = [
+                    'address'    => '',
+                    'name'       => IPS_GetProperty($i['ConnectionID'], 'Host'),
+                    'pin'        => IPS_GetProperty($i['ConnectionID'], 'GatewayPIN'),
+                    'instanceID' => $instanceID,
+                ];
+            } else {
+                $data->actions[0]->values[] = [
+                    'address'    => '',
+                    'name'       => $this->Translate('Unknown'),
+                    'pin'        => '',
+                    'instanceID' => $instanceID,
+                ];
+            }
         }
 
         return json_encode($data);
@@ -57,6 +82,19 @@ class TaHomaDiscovery extends IPSModule
                     'IPv4' => $deviceInfo[0]['IPv4'][0],
                     'PIN'  => $getValue($deviceInfo[0]['TXTRecords'], 'gateway_pin'),
                 ];
+            }
+        }
+        return $result;
+    }
+
+    private function getPhysicalChildren()
+    {
+        $ids = IPS_GetInstanceListByModuleID('{AFAC39AA-770E-2AD7-0C24-D813F5FDC0FB}');
+        $result = [];
+        foreach ($ids as $id) {
+            $i = IPS_GetInstance($id);
+            if ($i['ConnectionID'] > 0) {
+                $result[] = $id;
             }
         }
         return $result;
