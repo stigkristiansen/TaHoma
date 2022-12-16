@@ -19,7 +19,7 @@
                 {
                     "label": "Gateway PIN",
                     "name": "pin",
-                    "width": "100px"
+                    "width": "200px"
                 }
             ],
             "sort": {

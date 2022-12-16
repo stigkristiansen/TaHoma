@@ -33,7 +33,7 @@
                         "caption": "Username"
                     },
                     {
-                        "type": "ValidationTextBox",
+                        "type": "PasswordTextBox",
                         "name": "Password",
                         "caption": "Password"
                     }
