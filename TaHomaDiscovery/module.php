@@ -22,7 +22,7 @@ class TaHomaDiscovery extends IPSModule
                 'create'     => [
                     [
                         'moduleID'      => '{AFAC39AA-770E-2AD7-0C24-D813F5FDC0FB}',
-                        'configuration' => new stdClass,
+                        'configuration' => new stdClass(),
                     ],
                     [
                         'moduleID'      => '{161B0F84-1B8B-2EF0-1C8F-2EFFAC39006E}',
