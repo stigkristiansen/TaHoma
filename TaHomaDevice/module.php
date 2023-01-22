@@ -19,7 +19,6 @@ class TaHomaDevice extends IPSModule
             IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'open', $this->Translate('Offen'), 'Window-0', -1);
             IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'stop', $this->Translate('Stop'), '', -1);
             IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'closed', $this->Translate('Geschlossen'), 'Window-100', -1);
-            
             IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'my', $this->Translate('My'), 'Window-0', -1);
             
         }
@@ -69,7 +68,7 @@ class TaHomaDevice extends IPSModule
         // RTS devices do not seem to report any supported states
         // But they are happy to execute open, stop, close commands
         // We want to check for availability of those commands and simulate an open/close variable
-        if (empty($result->states) && $this->supportsCommands($result->definition->commands, ['open', 'stop', 'close'])) {
+        if (empty($result->states) && $this->supportsCommands($result->definition->commands, ['open', 'stop', 'close', 'my'])) {
             $this->processState((object) [
                 'type'  => 3,
                 'name'  => 'core:OpenClosedState',
