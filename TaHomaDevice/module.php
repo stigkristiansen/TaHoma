@@ -19,6 +19,8 @@ class TaHomaDevice extends IPSModule
             IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'open', $this->Translate('Offen'), 'Window-0', -1);
             IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'stop', $this->Translate('Stop'), '', -1);
             IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'closed', $this->Translate('Geschlossen'), 'Window-100', -1);
+            IPS_SetVariableProfileAssociation('TAHOMA.OpenClosedState', 'my', $this->Translate('My'), 'Window-0', -1);
+            
         }
     }
 
@@ -95,6 +97,9 @@ class TaHomaDevice extends IPSModule
                         break;
                     case 'closed':
                         $this->SendCommand('close', []);
+                        break;
+                    case 'my':
+                        $this->SendCommand('my', []);
                         break;
                 }
                 break;
